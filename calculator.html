@@ -46,7 +46,7 @@
                     <input type="number" id="otherPacks" name="otherPacks" min="0" value="0" class="form-input">
                 </div>
             </div>
-             <button id="calculateButton" class="w-full md:w-auto bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 px-6 rounded-md shadow-md transition duration-150 ease-in-out">Calculate My Progress</button>
+            <button id="calculateButton" class="w-full md:w-auto bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 px-6 rounded-md shadow-md transition duration-150 ease-in-out">Calculate My Progress</button>
             <div id="results" class="mt-8 space-y-6 hidden">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="stat-card text-center">
@@ -66,8 +66,8 @@
                     <p id="packsToPity" class="text-sm text-slate-600 mt-2 text-center">You are <span class="font-bold">500</span> packs away from the guarantee.</p>
                 </div>
                 <div class="stat-card">
-                     <h3 class="text-lg font-semibold text-slate-700 mb-2">Your Current Random Chance:</h3>
-                     <p id="randomChanceText" class="text-slate-600">Calculating...</p>
+                    <h3 class="text-lg font-semibold text-slate-700 mb-2">Your Current Random Chance:</h3>
+                    <p id="randomChanceText" class="text-slate-600">Calculating...</p>
                 </div>
             </div>
         </section>
@@ -103,7 +103,7 @@
             <p id="formSubmissionStatus" class="mt-4 text-sm"></p>
             <div class="info-box mt-6">
                 <p class="text-sm text-blue-700 font-semibold">Note for Page Owner:</p>
-                <p class="text-xs text-blue-600">To enable submissions: <br>1. Create a Google Form with questions matching the fields above (e.g., "PlayerLevelOn получение", "TotalPacksOn получение", "PityReached", "DateReceived"). <br>2. Link this form to your Google Sheet. <br>3. In the JavaScript code, replace `YOUR_FORM_ACTION_URL` with your form's action URL. <br>4. For each input in the HTML above, replace `entry.YOUR_..._FIELD_ID` in its `name` attribute with the correct field entry ID from your live Google Form (inspect the form to find these `entry.xxxxxxx` names).</p>
+                <p class="text-xs text-blue-600">To enable submissions: <br>1. Create a Google Form with questions that will produce column headers like "Player Level When Shards Received", "Estimated Total Packs Opened When Shards Received", "Did you hit the 500-pack pity guarantee", and "Date Received (Optional)". <br>2. Link this form to your Google Sheet. <br>3. In the JavaScript code below, update `GOOGLE_FORM_ACTION_URL` with your form's correct submission URL (it should end in `/formResponse`). <br>4. For each input in the HTML form above (e.g., `id="submitLevel"`), replace `entry.YOUR_..._FIELD_ID` in its `name` attribute with the actual field entry ID from your live Google Form (e.g., `entry.123456789`). You can find these by viewing the source of your live Google Form.</p>
             </div>
         </section>
 
@@ -134,7 +134,7 @@
              <p id="communityStatsStatus" class="mt-4 text-sm"></p>
             <div class="info-box mt-6">
                 <p class="text-sm text-blue-700 font-semibold">Note for Page Owner:</p>
-                <p class="text-xs text-blue-600">To enable statistics: <br>1. Publish your Google Sheet (the one linked to your form) to the web as a CSV. <br>2. In the JavaScript code, replace `YOUR_PUBLISHED_CSV_URL` with this public CSV link. <br>3. Ensure the JavaScript constants like `CSV_COLUMN_PACKS_OPENED` and `CSV_COLUMN_PITY_REACHED` exactly match your CSV header names (case-sensitive).</p>
+                <p class="text-xs text-blue-600">To enable statistics: <br>1. Publish your Google Sheet (the one linked to your form) to the web as a CSV. <br>2. In the JavaScript code, update `PUBLISHED_CSV_URL` with this public CSV link. <br>3. Ensure the JavaScript constants like `CSV_COLUMN_PACKS_OPENED` and `CSV_COLUMN_PITY_REACHED` exactly match your CSV header names (case-sensitive).</p>
             </div>
         </section>
 
@@ -312,8 +312,8 @@
         // !!! PAGE OWNER: Replace with your Google Form's action URL !!!
         // This URL is obtained after you create your Google Form. It usually ends with '/formResponse'.
         // Example: const GOOGLE_FORM_ACTION_URL = 'https://docs.google.com/forms/d/e/YOUR_UNIQUE_FORM_ID/formResponse';
-        // --- User has entered a URL below ---
-        const GOOGLE_FORM_ACTION_URL = 'https://docs.google.com/forms/u/0/d/1HqxEpOi4qUQ0SX2jhBEkEfMNAhrh_6L_ciWLQt7rUwQ/previewResponse'; 
+        // --- THIS IS THE CORRECTED LINK BASED ON YOUR PROVIDED FORM SOURCE ---
+        const GOOGLE_FORM_ACTION_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSfal2mGGixcEvN5QVz1g_TmwXBYNpn2hd_5xR2-zUwt9zgi7A/formResponse'; 
 
         if (heirloomDataForm) {
             heirloomDataForm.addEventListener('submit', async (event) => {
@@ -321,11 +321,14 @@
                 formSubmissionStatusEl.textContent = 'Submitting...';
                 formSubmissionStatusEl.className = 'mt-4 text-sm text-amber-600';
 
-                // Check if the placeholder URL is still there or if it's empty
-                if (GOOGLE_FORM_ACTION_URL === 'YOUR_FORM_ACTION_URL' || !GOOGLE_FORM_ACTION_URL || GOOGLE_FORM_ACTION_URL.includes('previewResponse')) {
-                    let alertMessage = 'Page owner: Please configure the GOOGLE_FORM_ACTION_URL in the JavaScript code.';
-                    if (GOOGLE_FORM_ACTION_URL.includes('previewResponse')) {
-                        alertMessage = 'Page owner: The GOOGLE_FORM_ACTION_URL appears to be a "previewResponse" link. Please use the correct "/formResponse" submission URL.';
+                // More robust check for placeholder or incorrect Form URL format
+                if (!GOOGLE_FORM_ACTION_URL || 
+                    GOOGLE_FORM_ACTION_URL === 'YOUR_FORM_ACTION_URL' || 
+                    !GOOGLE_FORM_ACTION_URL.includes('/formResponse')) {
+                    
+                    let alertMessage = 'Page owner: Please configure the GOOGLE_FORM_ACTION_URL in the JavaScript code with the correct link ending in "/formResponse".';
+                    if (GOOGLE_FORM_ACTION_URL && GOOGLE_FORM_ACTION_URL.includes('previewResponse')) { // Specific check for preview link
+                         alertMessage = 'Page owner: The GOOGLE_FORM_ACTION_URL currently uses a "previewResponse" link. Please use the correct "/formResponse" submission URL found in your form\'s HTML source code.';
                     }
                     formSubmissionStatusEl.textContent = 'Submission system not configured correctly by page owner.';
                     formSubmissionStatusEl.className = 'mt-4 text-sm text-red-600';
@@ -356,15 +359,14 @@
         const communityPackDistributionCanvas = document.getElementById('communityPackDistributionChart');
         let communityPackDistributionChart;
 
-        // !!! PAGE OWNER: Replace with your Published Google Sheet CSV URL !!!
+        // !!! PAGE OWNER: Replace with your Published Google Sheet CSV URL if different !!!
         // This URL is obtained from File > Share > Publish to web in your Google Sheet (select CSV format).
-        // Example: const PUBLISHED_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/YOUR_SHEET_ID/pub?gid=YOUR_GID&single=true&output=csv';
         // --- User has entered a URL below ---
         const PUBLISHED_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTfgrRLQ6vW1QzPDfP0G5TS_sZTD3Mkl1tUMbLSZ2jygnHYbojQTXrkR3KX39Vv8iSHKu2KlLeM4QQu/pub?gid=329297237&single=true&output=csv';
 
         // !!! PAGE OWNER: These constants MUST match your CSV header names EXACTLY (case-sensitive) !!!
         // Based on user's provided column list: "Timestamp,Player Level When Shards Received,Estimated Total Packs Opened When Shards Received,Did you hit the 500-pack pity guarantee,Date Received (Optional)"
-        const CSV_COLUMN_TIMESTAMP = 'Timestamp'; // Not used in current stats, but defined for completeness
+        const CSV_COLUMN_TIMESTAMP = 'Timestamp'; 
         const CSV_COLUMN_PLAYER_LEVEL = 'Player Level When Shards Received';
         const CSV_COLUMN_PACKS_OPENED = 'Estimated Total Packs Opened When Shards Received';
         const CSV_COLUMN_PITY_REACHED = 'Did you hit the 500-pack pity guarantee';
