@@ -102,8 +102,8 @@
             </form>
             <p id="formSubmissionStatus" class="mt-4 text-sm"></p>
             <div class="info-box mt-6">
-                <p class="text-sm text-blue-700 font-semibold">Note for Page Owner:</p>
-                <p class="text-xs text-blue-600">To enable submissions: <br>1. Create a Google Form with questions that will produce column headers like "Player Level When Shards Received", "Estimated Total Packs Opened When Shards Received", "Did you hit the 500-pack pity guarantee", and "Date Received (Optional)". <br>2. Link this form to your Google Sheet. <br>3. In the JavaScript code below, update `GOOGLE_FORM_ACTION_URL` with your form's correct submission URL (it should end in `/formResponse`). <br>4. For each input in the HTML form above (e.g., `id="submitLevel"`), replace `entry.YOUR_..._FIELD_ID` in its `name` attribute with the actual field entry ID from your live Google Form (e.g., `entry.123456789`). You can find these by viewing the source of your live Google Form.</p>
+                <p class="text-sm text-blue-700 font-semibold">Note for Page Owner (IMPORTANT for Submission):</p>
+                <p class="text-xs text-blue-600">1. Ensure the `GOOGLE_FORM_ACTION_URL` in the script below is correct (it has been updated based on your provided form source). <br>2. **Crucially, for each input field in the HTML form above (e.g., `id="submitLevel"`), you MUST replace its `name` attribute (e.g., `name="entry.YOUR_LEVEL_FIELD_ID"`) with the actual `entry.xxxxxxxxx` ID from YOUR Google Form. Find these by viewing the source of your live Google Form and inspecting each input element.**</p>
             </div>
         </section>
 
@@ -133,8 +133,8 @@
             </div>
              <p id="communityStatsStatus" class="mt-4 text-sm"></p>
             <div class="info-box mt-6">
-                <p class="text-sm text-blue-700 font-semibold">Note for Page Owner:</p>
-                <p class="text-xs text-blue-600">To enable statistics: <br>1. Publish your Google Sheet (the one linked to your form) to the web as a CSV. <br>2. In the JavaScript code, update `PUBLISHED_CSV_URL` with this public CSV link. <br>3. Ensure the JavaScript constants like `CSV_COLUMN_PACKS_OPENED` and `CSV_COLUMN_PITY_REACHED` exactly match your CSV header names (case-sensitive).</p>
+                <p class="text-sm text-blue-700 font-semibold">Note for Page Owner (Statistics):</p>
+                <p class="text-xs text-blue-600">1. Publish your Google Sheet (the one linked to your form) to the web as a CSV. <br>2. Update `PUBLISHED_CSV_URL` in the script with this public CSV link. <br>3. Ensure JavaScript constants like `CSV_COLUMN_PACKS_OPENED` match your CSV headers exactly.</p>
             </div>
         </section>
 
@@ -309,10 +309,8 @@
         const heirloomDataForm = document.getElementById('heirloomDataForm');
         const formSubmissionStatusEl = document.getElementById('formSubmissionStatus');
         
-        // !!! PAGE OWNER: Replace with your Google Form's action URL !!!
-        // This URL is obtained after you create your Google Form. It usually ends with '/formResponse'.
-        // Example: const GOOGLE_FORM_ACTION_URL = 'https://docs.google.com/forms/d/e/YOUR_UNIQUE_FORM_ID/formResponse';
-        // --- THIS IS THE CORRECTED LINK BASED ON YOUR PROVIDED FORM SOURCE ---
+        // !!! PAGE OWNER: This URL has been updated based on the Google Form source code you provided. !!!
+        // It should now be the correct submission endpoint.
         const GOOGLE_FORM_ACTION_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSfal2mGGixcEvN5QVz1g_TmwXBYNpn2hd_5xR2-zUwt9zgi7A/formResponse'; 
 
         if (heirloomDataForm) {
@@ -321,14 +319,14 @@
                 formSubmissionStatusEl.textContent = 'Submitting...';
                 formSubmissionStatusEl.className = 'mt-4 text-sm text-amber-600';
 
-                // More robust check for placeholder or incorrect Form URL format
+                // Check if the Form URL is correctly set and is a formResponse URL
                 if (!GOOGLE_FORM_ACTION_URL || 
-                    GOOGLE_FORM_ACTION_URL === 'YOUR_FORM_ACTION_URL' || 
-                    !GOOGLE_FORM_ACTION_URL.includes('/formResponse')) {
+                    GOOGLE_FORM_ACTION_URL === 'YOUR_FORM_ACTION_URL' || // Checks against a potential placeholder
+                    !GOOGLE_FORM_ACTION_URL.endsWith('/formResponse')) { // Validates the URL structure
                     
-                    let alertMessage = 'Page owner: Please configure the GOOGLE_FORM_ACTION_URL in the JavaScript code with the correct link ending in "/formResponse".';
-                    if (GOOGLE_FORM_ACTION_URL && GOOGLE_FORM_ACTION_URL.includes('previewResponse')) { // Specific check for preview link
-                         alertMessage = 'Page owner: The GOOGLE_FORM_ACTION_URL currently uses a "previewResponse" link. Please use the correct "/formResponse" submission URL found in your form\'s HTML source code.';
+                    let alertMessage = 'Page owner: The GOOGLE_FORM_ACTION_URL in the JavaScript code is not correctly configured. It should end with "/formResponse".';
+                    if (GOOGLE_FORM_ACTION_URL && GOOGLE_FORM_ACTION_URL.includes('preview')) { // Specific check for preview link
+                         alertMessage = 'Page owner: The GOOGLE_FORM_ACTION_URL currently seems to be a "preview" link. Please use the correct "/formResponse" submission URL from your form\'s HTML source.';
                     }
                     formSubmissionStatusEl.textContent = 'Submission system not configured correctly by page owner.';
                     formSubmissionStatusEl.className = 'mt-4 text-sm text-red-600';
@@ -336,6 +334,8 @@
                     return;
                 }
 
+                // !!! PAGE OWNER: Ensure the 'name' attributes in your HTML form (entry.YOUR_..._FIELD_ID)
+                // are replaced with the ACTUAL entry IDs from YOUR Google Form. This is CRITICAL.
                 const formData = new FormData(heirloomDataForm);
                 try {
                     await fetch(GOOGLE_FORM_ACTION_URL, { method: 'POST', mode: 'no-cors', body: formData });
@@ -359,13 +359,11 @@
         const communityPackDistributionCanvas = document.getElementById('communityPackDistributionChart');
         let communityPackDistributionChart;
 
-        // !!! PAGE OWNER: Replace with your Published Google Sheet CSV URL if different !!!
-        // This URL is obtained from File > Share > Publish to web in your Google Sheet (select CSV format).
-        // --- User has entered a URL below ---
+        // !!! PAGE OWNER: Ensure this URL is correct and your sheet is published as CSV and accessible. !!!
         const PUBLISHED_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTfgrRLQ6vW1QzPDfP0G5TS_sZTD3Mkl1tUMbLSZ2jygnHYbojQTXrkR3KX39Vv8iSHKu2KlLeM4QQu/pub?gid=329297237&single=true&output=csv';
 
         // !!! PAGE OWNER: These constants MUST match your CSV header names EXACTLY (case-sensitive) !!!
-        // Based on user's provided column list: "Timestamp,Player Level When Shards Received,Estimated Total Packs Opened When Shards Received,Did you hit the 500-pack pity guarantee,Date Received (Optional)"
+        // These are based on your Google Form question titles which become the sheet headers.
         const CSV_COLUMN_TIMESTAMP = 'Timestamp'; 
         const CSV_COLUMN_PLAYER_LEVEL = 'Player Level When Shards Received';
         const CSV_COLUMN_PACKS_OPENED = 'Estimated Total Packs Opened When Shards Received';
@@ -405,7 +403,7 @@
             }
 
             try {
-                const response = await fetch(PUBLISHED_CSV_URL + '&timestamp=' + new Date().getTime()); 
+                const response = await fetch(PUBLISHED_CSV_URL + '&t=' + new Date().getTime()); // Cache buster 
                 if (!response.ok) {
                     throw new Error(`Failed to fetch CSV: ${response.status} ${response.statusText}. URL: ${PUBLISHED_CSV_URL}`);
                 }
