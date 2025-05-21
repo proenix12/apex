@@ -134,7 +134,7 @@
              <p id="communityStatsStatus" class="mt-4 text-sm"></p>
             <div class="info-box mt-6">
                 <p class="text-sm text-blue-700 font-semibold">Note for Page Owner:</p>
-                <p class="text-xs text-blue-600">To enable statistics: <br>1. Publish your Google Sheet (the one linked to your form) to the web as a CSV. <br>2. In the JavaScript code, replace `YOUR_PUBLISHED_CSV_URL` with this public CSV link. <br>3. Ensure the JavaScript constants `CSV_COLUMN_PACKS_OPENED` and `CSV_COLUMN_PITY_REACHED` exactly match your CSV header names for those columns (case-sensitive).</p>
+                <p class="text-xs text-blue-600">To enable statistics: <br>1. Publish your Google Sheet (the one linked to your form) to the web as a CSV. <br>2. In the JavaScript code, replace `YOUR_PUBLISHED_CSV_URL` with this public CSV link. <br>3. Ensure the JavaScript constants like `CSV_COLUMN_PACKS_OPENED` and `CSV_COLUMN_PITY_REACHED` exactly match your CSV header names (case-sensitive).</p>
             </div>
         </section>
 
@@ -312,6 +312,7 @@
         // !!! PAGE OWNER: Replace with your Google Form's action URL !!!
         // This URL is obtained after you create your Google Form. It usually ends with '/formResponse'.
         // Example: const GOOGLE_FORM_ACTION_URL = 'https://docs.google.com/forms/d/e/YOUR_UNIQUE_FORM_ID/formResponse';
+        // --- User has entered a URL below ---
         const GOOGLE_FORM_ACTION_URL = 'https://docs.google.com/forms/u/0/d/1HqxEpOi4qUQ0SX2jhBEkEfMNAhrh_6L_ciWLQt7rUwQ/previewResponse'; 
 
         if (heirloomDataForm) {
@@ -320,10 +321,15 @@
                 formSubmissionStatusEl.textContent = 'Submitting...';
                 formSubmissionStatusEl.className = 'mt-4 text-sm text-amber-600';
 
-                if (GOOGLE_FORM_ACTION_URL === 'YOUR_FORM_ACTION_URL' || !GOOGLE_FORM_ACTION_URL) {
-                    formSubmissionStatusEl.textContent = 'Submission system not configured by page owner.';
+                // Check if the placeholder URL is still there or if it's empty
+                if (GOOGLE_FORM_ACTION_URL === 'YOUR_FORM_ACTION_URL' || !GOOGLE_FORM_ACTION_URL || GOOGLE_FORM_ACTION_URL.includes('previewResponse')) {
+                    let alertMessage = 'Page owner: Please configure the GOOGLE_FORM_ACTION_URL in the JavaScript code.';
+                    if (GOOGLE_FORM_ACTION_URL.includes('previewResponse')) {
+                        alertMessage = 'Page owner: The GOOGLE_FORM_ACTION_URL appears to be a "previewResponse" link. Please use the correct "/formResponse" submission URL.';
+                    }
+                    formSubmissionStatusEl.textContent = 'Submission system not configured correctly by page owner.';
                     formSubmissionStatusEl.className = 'mt-4 text-sm text-red-600';
-                    alert('Page owner: Please configure the GOOGLE_FORM_ACTION_URL in the JavaScript code.');
+                    alert(alertMessage);
                     return;
                 }
 
@@ -353,19 +359,20 @@
         // !!! PAGE OWNER: Replace with your Published Google Sheet CSV URL !!!
         // This URL is obtained from File > Share > Publish to web in your Google Sheet (select CSV format).
         // Example: const PUBLISHED_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/YOUR_SHEET_ID/pub?gid=YOUR_GID&single=true&output=csv';
-        const PUBLISHED_CSV_URL = 'YOUR_PUBLISHED_CSV_URL';
+        // --- User has entered a URL below ---
+        const PUBLISHED_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTfgrRLQ6vW1QzPDfP0G5TS_sZTD3Mkl1tUMbLSZ2jygnHYbojQTXrkR3KX39Vv8iSHKu2KlLeM4QQu/pub?gid=329297237&single=true&output=csv';
 
         // !!! PAGE OWNER: These constants MUST match your CSV header names EXACTLY (case-sensitive) !!!
-        // These are the suggested column names for your Google Sheet.
-        // If your Google Form creates slightly different names, adjust these constants accordingly.
-        const CSV_COLUMN_PLAYER_LEVEL = 'PlayerLevelOn получение';
-        const CSV_COLUMN_PACKS_OPENED = 'TotalPacksOn получение';
-        const CSV_COLUMN_PITY_REACHED = 'PityReached';
-        // const CSV_COLUMN_DATE_RECEIVED = 'DateReceived'; // Add if you plan to use this column for stats
+        // Based on user's provided column list: "Timestamp,Player Level When Shards Received,Estimated Total Packs Opened When Shards Received,Did you hit the 500-pack pity guarantee,Date Received (Optional)"
+        const CSV_COLUMN_TIMESTAMP = 'Timestamp'; // Not used in current stats, but defined for completeness
+        const CSV_COLUMN_PLAYER_LEVEL = 'Player Level When Shards Received';
+        const CSV_COLUMN_PACKS_OPENED = 'Estimated Total Packs Opened When Shards Received';
+        const CSV_COLUMN_PITY_REACHED = 'Did you hit the 500-pack pity guarantee';
+        const CSV_COLUMN_DATE_RECEIVED = 'Date Received (Optional)'; 
 
         function parseCSV(csvText) {
             const lines = csvText.trim().split(/\r\n|\n/);
-            if (lines.length < 2) return []; // No data beyond headers
+            if (lines.length < 2) return []; 
             const headers = lines[0].split(',').map(h => h.trim());
             const data = [];
             for (let i = 1; i < lines.length; i++) {
@@ -396,7 +403,7 @@
             }
 
             try {
-                const response = await fetch(PUBLISHED_CSV_URL + '&timestamp=' + new Date().getTime()); // Add timestamp to try and bypass cache
+                const response = await fetch(PUBLISHED_CSV_URL + '&timestamp=' + new Date().getTime()); 
                 if (!response.ok) {
                     throw new Error(`Failed to fetch CSV: ${response.status} ${response.statusText}. URL: ${PUBLISHED_CSV_URL}`);
                 }
@@ -410,15 +417,13 @@
                     return;
                 }
                 
-                // Check if necessary columns exist in the parsed data
                 if (data.length > 0 && (!data[0].hasOwnProperty(CSV_COLUMN_PACKS_OPENED) || !data[0].hasOwnProperty(CSV_COLUMN_PITY_REACHED))) {
                     communityStatsStatusEl.textContent = 'CSV data is missing required columns. Check JS constants (CSV_COLUMN_PACKS_OPENED, CSV_COLUMN_PITY_REACHED) match CSV headers.';
                     communityStatsStatusEl.className = 'mt-4 text-sm text-red-600';
-                    console.error('CSV Column Mismatch. Expected headers based on constants:', CSV_COLUMN_PACKS_OPENED, CSV_COLUMN_PITY_REACHED, '. Found headers:', Object.keys(data[0]));
+                    console.error('CSV Column Mismatch. Expected headers for stats:', CSV_COLUMN_PACKS_OPENED, CSV_COLUMN_PITY_REACHED, '. Found headers in CSV:', Object.keys(data[0]));
                     communityStatsResultsEl.classList.add('hidden');
                     return;
                 }
-
 
                 let totalSubmissions = data.length;
                 let sumOfPacks = 0;
