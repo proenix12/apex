@@ -27,15 +27,20 @@
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-XLYH8EJ9F6');
+  // gtag('js', new Date()); // Will be called by consent logic
+  // gtag('config', 'G-XLYH8EJ9F6'); // Will be called by consent logic
 </script>
 
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen p-4 md:p-8">
 
-    <div class="container mx-auto max-w-4xl bg-white shadow-xl rounded-lg p-6 md:p-10">
+    <div id="consent-banner" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background-color: #1e293b; /* slate-800 */ color: white; padding: 20px; text-align: center; z-index: 1000; border-top: 1px solid #334155; /* slate-700 */">
+        <p style="margin: 0 0 15px 0; font-size: 0.9rem; line-height: 1.6;">This site uses cookies for analytics. By clicking "Accept", you consent to our use of cookies for this purpose. <a href="#" onclick="alert('Link to your privacy policy page here.'); return false;" style="color: #0ea5e9; text-decoration: underline;">Learn more</a>.</p>
+        <button id="consent-accept" style="background-color: #0ea5e9; /* sky-500 */ color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px; font-weight: 500;">Accept</button>
+        <button id="consent-reject" style="background-color: #475569; /* slate-600 */ color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: 500;">Reject</button>
+    </div>
+
+    <div class="container mx-auto">
 
         <header class="text-center mb-8 md:mb-12">
             <h1 class="text-3xl md:text-4xl font-bold text-sky-700">Apex Legends Heirloom Shard Analyzer ✨</h1>
@@ -506,6 +511,84 @@
         document.addEventListener('DOMContentLoaded', () => {
             initializeChart(); 
             // loadCommunityStats(); // Uncomment to load community stats automatically on page load
+        });
+
+        // --- Google Analytics Consent Logic ---
+        const CONSENT_KEY_GA_CALC = 'ga_consent_v1'; // Using the same key as index.html for consistency
+        const GA_TRACKING_ID_CALC = 'G-XLYH8EJ9F6';
+
+        function showConsentBannerCalc() {
+            const banner = document.getElementById('consent-banner');
+            if (banner) banner.style.display = 'block';
+        }
+
+        function hideConsentBannerCalc() {
+            const banner = document.getElementById('consent-banner');
+            if (banner) banner.style.display = 'none';
+        }
+
+        function loadGAScriptCalc() {
+            if (document.getElementById('ga-script-calc')) return; 
+
+            const script = document.createElement('script');
+            script.id = 'ga-script-calc';
+            script.async = true;
+            script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_TRACKING_ID_CALC}`;
+            document.head.appendChild(script);
+
+            script.onload = () => {
+                console.log("GA script loaded for calculator.");
+                initializeAnalyticsCalc();
+            };
+            script.onerror = () => {
+                console.error("Failed to load GA script for calculator.");
+            };
+        }
+        
+        function initializeAnalyticsCalc() {
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', GA_TRACKING_ID_CALC);
+            console.log("Google Analytics initialized for calculator with ID:", GA_TRACKING_ID_CALC);
+        }
+
+        function checkConsentCalc() {
+            const consentGiven = localStorage.getItem(CONSENT_KEY_GA_CALC);
+            if (consentGiven === 'true') {
+                console.log("User consent previously given for GA (calculator).");
+                loadGAScriptCalc();
+                hideConsentBannerCalc();
+            } else if (consentGiven === 'false') {
+                hideConsentBannerCalc();
+                console.log("User consent previously rejected for GA (calculator).");
+            } else {
+                showConsentBannerCalc();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const acceptButton = document.getElementById('consent-accept');
+            const rejectButton = document.getElementById('consent-reject');
+
+            if (acceptButton) {
+                acceptButton.addEventListener('click', () => {
+                    localStorage.setItem(CONSENT_KEY_GA_CALC, 'true');
+                    console.log("User accepted GA consent (calculator).");
+                    loadGAScriptCalc();
+                    hideConsentBannerCalc();
+                });
+            }
+
+            if (rejectButton) {
+                rejectButton.addEventListener('click', () => {
+                    localStorage.setItem(CONSENT_KEY_GA_CALC, 'false');
+                    console.log("User rejected GA consent (calculator).");
+                    hideConsentBannerCalc();
+                });
+            }
+            
+            setTimeout(checkConsentCalc, 100); // Defer check
         });
     </script>
 </body>

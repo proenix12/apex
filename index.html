@@ -84,17 +84,22 @@
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-XLYH8EJ9F6');
+  // gtag('js', new Date());  // Will be called by consent logic
+  // gtag('config', 'G-XLYH8EJ9F6'); // Will be called by consent logic
 </script>
 
 </head>
 <body class="antialiased">
 
+    <div id="consent-banner" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background-color: #1e293b; /* slate-800 */ color: white; padding: 20px; text-align: center; z-index: 1000; border-top: 1px solid #334155; /* slate-700 */">
+        <p style="margin: 0 0 15px 0; font-size: 0.9rem; line-height: 1.6;">This site uses cookies for analytics. By clicking "Accept", you consent to our use of cookies for this purpose. <a href="#" onclick="alert('Link to your privacy policy page here.'); return false;" style="color: #0ea5e9; text-decoration: underline;">Learn more</a>.</p>
+        <button id="consent-accept" style="background-color: #0ea5e9; /* sky-500 */ color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px; font-weight: 500;">Accept</button>
+        <button id="consent-reject" style="background-color: #475569; /* slate-600 */ color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: 500;">Reject</button>
+    </div>
+
     <div class="container mx-auto px-4 py-8 md:py-12 max-w-4xl">
         
-        <article class="content-article bg-white shadow-2xl rounded-lg p-6 md:p-10 lg:p-12">
+        <article class="content-article mx-auto">
             <header class="mb-10 text-center">
                 <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold mb-5">Understanding Your Apex Legends Heirloom Shard Journey: A Pack Calculation and System Analysis</h1>
                 <p class="text-lg text-slate-600">A Deep Dive into Apex Pack Counts, Drop Rates, and the Path to Your Heirloom.</p>
@@ -232,5 +237,85 @@
         </footer>
     </div>
 
+    <script>
+        const CONSENT_KEY_GA = 'ga_consent_v1'; // Use a versioned key
+        const GA_TRACKING_ID = 'G-XLYH8EJ9F6'; // Your GA Tracking ID
+
+        function showConsentBanner() {
+            const banner = document.getElementById('consent-banner');
+            if (banner) banner.style.display = 'block';
+        }
+
+        function hideConsentBanner() {
+            const banner = document.getElementById('consent-banner');
+            if (banner) banner.style.display = 'none';
+        }
+
+        function loadGAScript() {
+            if (document.getElementById('ga-script')) return; // Script already added
+
+            const script = document.createElement('script');
+            script.id = 'ga-script';
+            script.async = true;
+            script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_TRACKING_ID}`;
+            document.head.appendChild(script);
+
+            script.onload = () => {
+                console.log("GA script loaded.");
+                initializeAnalytics();
+            };
+            script.onerror = () => {
+                console.error("Failed to load GA script.");
+            };
+        }
+        
+        function initializeAnalytics() {
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', GA_TRACKING_ID);
+            console.log("Google Analytics initialized with ID:", GA_TRACKING_ID);
+        }
+
+        function checkConsent() {
+            const consentGiven = localStorage.getItem(CONSENT_KEY_GA);
+            if (consentGiven === 'true') {
+                console.log("User consent previously given for GA.");
+                loadGAScript();
+                hideConsentBanner();
+            } else if (consentGiven === 'false') {
+                hideConsentBanner();
+                console.log("User consent previously rejected for GA.");
+            } else {
+                showConsentBanner();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const acceptButton = document.getElementById('consent-accept');
+            const rejectButton = document.getElementById('consent-reject');
+
+            if (acceptButton) {
+                acceptButton.addEventListener('click', () => {
+                    localStorage.setItem(CONSENT_KEY_GA, 'true');
+                    console.log("User accepted GA consent.");
+                    loadGAScript();
+                    hideConsentBanner();
+                });
+            }
+
+            if (rejectButton) {
+                rejectButton.addEventListener('click', () => {
+                    localStorage.setItem(CONSENT_KEY_GA, 'false');
+                    console.log("User rejected GA consent.");
+                    hideConsentBanner();
+                });
+            }
+            
+            // Defer initial check slightly to ensure DOM is fully ready
+            // and to avoid potential race conditions with other scripts
+            setTimeout(checkConsent, 100); 
+        });
+    </script>
 </body>
 </html>
