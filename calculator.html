@@ -3,73 +3,345 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Understanding Apex Legends Heirloom Shards | Pack Calculator & Analysis</title>
-    <meta name="description" content="Learn about Apex Legends Heirloom Shards, understand the pack opening system, and how progression affects your chances. Includes a link to our interactive Heirloom Shard Analyzer.">
-    <meta name="keywords" content="Apex Legends, Heirloom Shards, Apex Packs, Pity System, Level Progression, Gaming, EA, Heirloom Calculator, Apex Shard Analysis">
-    <meta name="author" content="Apex Legends Insights">
-    <link rel="canonical" href="https://www.example.com/apex-heirloom-info">
+    <title>Apex Legends Heirloom Shard Analyzer</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Visualization & Content Choices:
+        - Report Info: Player level, purchased packs, level-up pack system. Goal: Personalized pack estimation and pity progress. Viz/Presentation: HTML input fields, JS for calculation, dynamic text output, HTML/CSS progress bar. Interaction: User inputs data, results and chart update dynamically. Justification: Provides immediate, relevant feedback to the user. Library: Vanilla JS.
+        - Report Info: 0.045% drop rate, 500-pack pity system, Collection Event Heirloom rules. Goal: Educate user on core mechanics. Viz/Presentation: Clear, concise text blocks using Tailwind for styling. Unicode characters for emphasis (e.g., ✨, 🛡️). Interaction: Static informative content. Justification: Essential background information for understanding probabilities. Library: N/A.
+        - Report Info: Cumulative probability of obtaining shards by X packs. Goal: Visually represent the chances over time and the impact of pity. Viz/Presentation: Chart.js line chart. X-axis: Packs Opened (0-500). Y-axis: Cumulative Probability (0-100%). A dynamic marker will show the user's current pack count on the chart. Interaction: Chart updates based on calculator input. Justification: Makes abstract probability tangible and shows long-term outlook. Library: Chart.js, Vanilla JS.
+        - Report Info: Statistical likelihood of not having shards at ~219 packs (from report example). Goal: Contextualize user's potential lack of shards. Viz/Presentation: Dynamic text within the calculator section and a summary in the 'Key Insights' section. Interaction: Text updates with calculator. Justification: Addresses common user frustration directly. Library: Vanilla JS.
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8fafc; /* Tailwind slate-50 */
-            color: #1e293b; /* Tailwind slate-800 */
-        }
-        .content-section h1, .content-section h2, .content-section h3 {
-            color: #0f172a; /* Tailwind slate-900 */
-        }
-        .cta-button {
-            background-color: #0ea5e9; /* Tailwind sky-500 */
+        body { font-family: 'Inter', sans-serif; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        .chart-container { position: relative; width: 100%; margin-left: auto; margin-right: auto; }
+        .stat-card { background-color: white; padding: 1.5rem; border-radius: 0.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); }
+        .progress-bar-bg { background-color: #e5e7eb; border-radius: 0.375rem; overflow: hidden; height: 1.5rem; }
+        .progress-bar-fill { background-color: #0284c7; /* sky-600 */ height: 100%; transition: width 0.5s ease-in-out; text-align: center; color: white; font-weight: 600; line-height: 1.5rem; }
+        .tab-button { padding: 0.5rem 1rem; border-radius: 0.375rem; cursor: pointer; transition: background-color 0.3s, color 0.3s; }
+        .tab-button.active { background-color: #0284c7; color: white; }
+        .tab-button:not(.active) { background-color: #e5e7eb; color: #374151; }
+        .tooltip {
+            position: absolute;
+            background-color: rgba(0,0,0,0.8);
             color: white;
-            transition: background-color 0.3s ease;
-        }
-        .cta-button:hover {
-            background-color: #0284c7; /* Tailwind sky-600 */
-        }
-        .prose-styles p {
-            line-height: 1.75;
-            margin-bottom: 1.25em;
-        }
-        .prose-styles h2 {
-            margin-top: 2em;
-            margin-bottom: 1em;
-            border-bottom: 1px solid #e2e8f0; /* Tailwind slate-200 */
-            padding-bottom: 0.5em;
-        }
-        .prose-styles h3 {
-            margin-top: 1.5em;
-            margin-bottom: 0.75em;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 10;
         }
     </style>
 </head>
-<body class="antialiased">
+<body class="bg-slate-100 text-slate-800 min-h-screen p-4 md:p-8">
 
-    <div class="container mx-auto px-4 py-8 md:py-16 max-w-3xl">
-        
-        <article class="content-section bg-white shadow-xl rounded-lg p-6 md:p-10">
-            <header class="mb-8 text-center">
-                <h1 class="text-3xl md:text-4xl font-bold mb-4">Understanding Your Apex Legends Heirloom Shard Journey: A Pack Calculation and System Analysis</h1>
-            </header>
+    <div class="container mx-auto max-w-4xl bg-white shadow-xl rounded-lg p-6 md:p-10">
 
-            <section class="prose-styles">
-                <p class="text-lg text-slate-700 leading-relaxed mb-8">
-                    The pursuit of Heirloom Shards in Apex Legends is a significant endeavor for many dedicated players. These highly coveted cosmetic items represent a pinnacle of personalization, and acquiring the 150 shards needed to unlock an Heirloom of choice is a common long-term goal. This analysis addresses the specific situation of a player at level 220+ who has also purchased 100 Apex Packs, aiming to provide a calculated estimate of the total regular Apex Packs opened and a detailed explanation of the Heirloom Shard acquisition system. The objective is to clarify why, despite considerable playtime and investment, Heirloom Shards may not have yet been obtained, based on official game information and statistical understanding.
-                </p>
+        <header class="text-center mb-8 md:mb-12">
+            <h1 class="text-3xl md:text-4xl font-bold text-sky-700">Apex Legends Heirloom Shard Analyzer ✨</h1>
+            <p class="mt-2 text-slate-600">Estimate your pack count, understand your chances, and see your progress towards guaranteed Heirloom Shards!</p>
+        </header>
 
-                <div class="my-10 text-center">
-                    <a href="analyzer.html" 
-                       class="cta-button inline-block font-semibold py-3 px-8 rounded-lg shadow-md text-lg">
-                        Apex Legends Heirloom Shard Analyzer ✨
-                    </a>
-                    <p class="text-sm text-slate-600 mt-3">Use our interactive tool to estimate your pack count and chances!</p>
+        <section id="calculator" class="mb-8 md:mb-12">
+            <h2 class="text-2xl font-semibold text-sky-600 mb-6">Your Heirloom Journey Tracker 🗺️</h2>
+            <p class="mb-6 text-slate-700">Enter your current Apex Legends player level and the number of regular Apex Packs you've purchased. This tool will estimate your total packs opened and show how close you are to the 500-pack pity guarantee. Packs from Battle Passes or special events (that grant standard Apex Packs) can also be added if you've tracked them.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label for="playerLevel" class="block text-sm font-medium text-slate-700 mb-1">Your Player Level (1-500+):</label>
+                    <input type="number" id="playerLevel" name="playerLevel" min="1" value="1" class="w-full p-3 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500">
+                </div>
+                <div>
+                    <label for="purchasedPacks" class="block text-sm font-medium text-slate-700 mb-1">Purchased Regular Apex Packs:</label>
+                    <input type="number" id="purchasedPacks" name="purchasedPacks" min="0" value="0" class="w-full p-3 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500">
+                </div>
+                <div>
+                    <label for="otherPacks" class="block text-sm font-medium text-slate-700 mb-1">Other Regular Packs (Battle Pass, etc.):</label>
+                    <input type="number" id="otherPacks" name="otherPacks" min="0" value="0" class="w-full p-3 border border-slate-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500">
+                </div>
+            </div>
+             <button id="calculateButton" class="w-full md:w-auto bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 px-6 rounded-md shadow-md transition duration-150 ease-in-out">Calculate My Progress</button>
+
+            <div id="results" class="mt-8 space-y-6 hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="stat-card text-center">
+                        <h3 class="text-lg font-semibold text-slate-500 mb-1">Packs from Leveling</h3>
+                        <p id="packsFromLevel" class="text-3xl font-bold text-sky-600">0</p>
+                    </div>
+                    <div class="stat-card text-center">
+                        <h3 class="text-lg font-semibold text-slate-500 mb-1">Total Estimated Packs Opened</h3>
+                        <p id="totalPacksOpened" class="text-3xl font-bold text-sky-600">0</p>
+                    </div>
                 </div>
 
-                <h2 class="text-2xl md:text-3xl font-semibold">Calculating Your Apex Pack Journey: An Estimation</h2>
-                <p class="text-slate-700 leading-relaxed">
-                    To understand the proximity to potentially receiving Heirloom Shards, particularly concerning the 500-pack guarantee, it is first necessary to estimate the total number of regular Apex Packs opened. This estimation considers packs earned through player leveling and direct purchases.
-                </p>
+                <div>
+                    <h3 class="text-lg font-semibold text-slate-700 mb-2">Progress to 500-Pack Pity Guarantee:</h3>
+                    <div class="progress-bar-bg">
+                        <div id="progressBarFill" class="progress-bar-fill" style="width: 0%;">0%</div>
+                    </div>
+                    <p id="packsToPity" class="text-sm text-slate-600 mt-2 text-center">You are <span class="font-bold">500</span> packs away from the guarantee.</p>
+                </div>
+                
+                <div class="stat-card">
+                     <h3 class="text-lg font-semibold text-slate-700 mb-2">Your Current Random Chance:</h3>
+                     <p id="randomChanceText" class="text-slate-600">Calculating...</p>
+                </div>
+            </div>
+        </section>
 
-                <h3 class="text-xl md:text-2xl font-semibold">A. Packs Earned Through Player Level Progression (up to Level 220)</h3>
-                <p class="text-slate-700 leading-relaxed">
-                    Apex Legends rewards players w
+        <section id="systemExplanation" class="mb-8 md:mb-12">
+            <h2 class="text-2xl font-semibold text-sky-600 mb-6">Understanding the Odds 🎲</h2>
+            <p class="mb-6 text-slate-700">Heirloom Shards are rare, but a system is in place to eventually guarantee them. Here's a breakdown of the core mechanics based on official information and the provided report.</p>
+            <div class="space-y-6">
+                <div class="stat-card">
+                    <h3 class="text-xl font-semibold text-slate-700 mb-2">The 0.045% Random Drop Rate</h3>
+                    <p class="text-slate-600">Each regular Apex Pack has a 0.045% chance of containing 150 Heirloom Shards. This is approximately a 1 in 2,222 chance per pack. This chance is independent for each pack you open, until the pity system kicks in.</p>
+                </div>
+                <div class="stat-card">
+                    <h3 class="text-xl font-semibold text-slate-700 mb-2">The 500-Pack Pity System 🛡️</h3>
+                    <p class="text-slate-600">Apex Legends guarantees you will receive 150 Heirloom Shards in your 500th regular Apex Pack IF you haven't received them from a random drop in the previous 499 packs. Once you receive Heirloom Shards (either randomly or via pity), this 500-pack counter resets.</p>
+                </div>
+                <div class="stat-card">
+                    <h3 class="text-xl font-semibold text-slate-700 mb-2">Collection Event Heirlooms</h3>
+                    <p class="text-slate-600">If you obtain an Heirloom by purchasing all items in a Collection Event, this <span class="font-bold">does not</span> reset your 500-pack pity counter for Heirloom Shards from regular Apex Packs. These are considered separate acquisition methods.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="probabilityVisualized" class="mb-8 md:mb-12">
+            <h2 class="text-2xl font-semibold text-sky-600 mb-6">Probability Visualized 📊</h2>
+            <p class="mb-6 text-slate-700">This chart shows the cumulative probability of receiving Heirloom Shards as you open more regular Apex Packs. The line dramatically increases towards 100% as you approach the 500-pack pity limit. Your current estimated pack count (from the tracker above) will be highlighted on the chart once you calculate your progress.</p>
+            <div class="chart-container bg-white p-4 rounded-lg shadow-md h-72 md:h-96 max-w-3xl">
+                <canvas id="probabilityChart"></canvas>
+            </div>
+             <div id="chartTooltip" class="tooltip"></div>
+        </section>
+
+        <section id="keyInsights" class="mb-8 md:mb-12">
+            <h2 class="text-2xl font-semibold text-sky-600 mb-6">Key Insights & Why Still No Shards? 🤔</h2>
+            <p class="mb-6 text-slate-700">Based on the detailed analysis provided in the source report, here are some key takeaways if you're wondering why you haven't received Heirloom Shards yet:</p>
+            <div class="space-y-4">
+                <div class="p-4 bg-sky-50 border border-sky-200 rounded-md">
+                    <h3 class="font-semibold text-slate-700">It's Statistically Normal (Usually)</h3>
+                    <p class="text-slate-600 text-sm">With a 0.045% chance per pack, it's common to open hundreds of packs without a random drop. For example, after 219 packs, there's still a ~90.6% chance you *wouldn't* have received them randomly. Your experience is likely typical unless you are very close to or past the 500-pack mark.</p>
+                </div>
+                <div class="p-4 bg-sky-50 border border-sky-200 rounded-md">
+                    <h3 class="font-semibold text-slate-700">Patience or Pity</h3>
+                    <p class="text-slate-600 text-sm">Heirloom Shards are a long-term goal. Most players will get them via the 500-pack pity system rather than extreme luck. The calculator above helps you see how far you have to go for that guarantee.</p>
+                </div>
+                <div class="p-4 bg-sky-50 border border-sky-200 rounded-md">
+                    <h3 class="font-semibold text-slate-700">Track Your Packs</h3>
+                    <p class="text-slate-600 text-sm">While there's no official in-game counter, keeping a rough estimate (especially of purchased packs and fully completed Battle Pass packs) helps you know your progress towards the pity limit.</p>
+                </div>
+            </div>
+        </section>
+
+        <footer class="text-center pt-8 mt-8 border-t border-slate-200">
+            <p class="text-sm text-slate-500">This analyzer is based on publicly available information and the Apex Legends Heirloom Shard report. It provides estimates and explanations for informational purposes.</p>
+            <p class="text-xs text-slate-400 mt-1">Apex Legends is a trademark of Electronic Arts Inc.</p>
+        </footer>
+    </div>
+
+    <script>
+        const playerLevelInput = document.getElementById('playerLevel');
+        const purchasedPacksInput = document.getElementById('purchasedPacks');
+        const otherPacksInput = document.getElementById('otherPacks');
+        const calculateButton = document.getElementById('calculateButton');
+        const resultsDiv = document.getElementById('results');
+        const packsFromLevelEl = document.getElementById('packsFromLevel');
+        const totalPacksOpenedEl = document.getElementById('totalPacksOpened');
+        const progressBarFillEl = document.getElementById('progressBarFill');
+        const packsToPityEl = document.getElementById('packsToPity');
+        const randomChanceTextEl = document.getElementById('randomChanceText');
+        
+        const probabilityChartCanvas = document.getElementById('probabilityChart');
+        const chartTooltipEl = document.getElementById('chartTooltip');
+        let probabilityChart;
+
+        const HEIRLOOM_PITY_CAP = 500;
+        const HEIRLOOM_CHANCE_PER_PACK = 0.00045;
+
+        function calculatePacksFromPlayerLevel(level) {
+            if (level <= 1) return 0;
+            let packs = 0;
+            if (level <= 20) { // Levels 2-20: 1 pack per level
+                packs = level - 1;
+            } else {
+                packs = 19; // Packs from levels 2-20
+                if (level <= 300) { // Levels 22-300: 1 pack per 2 levels
+                    packs += Math.floor((level - 22) / 2) + 1;
+                } else { // Level > 300
+                    packs += Math.floor((300 - 22) / 2) + 1; // Packs from 22-300
+                    if (level >= 305) { // Levels 305-500: 1 pack per 5 levels
+                         packs += Math.floor((Math.min(level, 500) - 305) / 5) + 1;
+                    }
+                }
+            }
+            return packs;
+        }
+
+        function updateResults() {
+            const level = parseInt(playerLevelInput.value) || 0;
+            const purchasedPacks = parseInt(purchasedPacksInput.value) || 0;
+            const otherPacks = parseInt(otherPacksInput.value) || 0;
+
+            const packsFromLevel = calculatePacksFromPlayerLevel(level);
+            const totalPacks = packsFromLevel + purchasedPacks + otherPacks;
+            
+            packsFromLevelEl.textContent = packsFromLevel;
+            totalPacksOpenedEl.textContent = totalPacks;
+
+            const progressPercent = Math.min((totalPacks / HEIRLOOM_PITY_CAP) * 100, 100);
+            progressBarFillEl.style.width = progressPercent + '%';
+            progressBarFillEl.textContent = Math.round(progressPercent) + '%';
+
+            const packsRemaining = Math.max(0, HEIRLOOM_PITY_CAP - totalPacks);
+            packsToPityEl.innerHTML = `You are <span class="font-bold">${packsRemaining}</span> regular Apex Packs away from the guarantee.`;
+            
+            const cumulativeChanceOfNotGetting = Math.pow((1 - HEIRLOOM_CHANCE_PER_PACK), totalPacks);
+            const cumulativeChanceOfGetting = (1 - cumulativeChanceOfNotGetting) * 100;
+
+            if (totalPacks >= HEIRLOOM_PITY_CAP) {
+                 randomChanceTextEl.textContent = `You have reached or exceeded the 500-pack pity limit! You are guaranteed Heirloom Shards if you haven't received them.`;
+            } else {
+                 randomChanceTextEl.textContent = `Based on ${totalPacks} packs, you've had approximately a ${cumulativeChanceOfGetting.toFixed(2)}% chance of randomly receiving Heirloom Shards by now. Remember, the 500-pack pity is your ultimate guarantee.`;
+            }
+
+            resultsDiv.classList.remove('hidden');
+            updateChartHighlight(totalPacks);
+        }
+        
+        calculateButton.addEventListener('click', updateResults);
+
+        function generateChartData() {
+            const labels = [];
+            const data = [];
+            for (let i = 0; i <= HEIRLOOM_PITY_CAP; i++) {
+                labels.push(i);
+                if (i < HEIRLOOM_PITY_CAP) {
+                    const cumulativeChanceOfNotGetting = Math.pow((1 - HEIRLOOM_CHANCE_PER_PACK), i);
+                    data.push((1 - cumulativeChanceOfNotGetting) * 100);
+                } else {
+                    data.push(100); // Guaranteed at 500
+                }
+            }
+            return { labels, data };
+        }
+
+        function initializeChart() {
+            const { labels, data } = generateChartData();
+            const ctx = probabilityChartCanvas.getContext('2d');
+            
+            Chart.defaults.font.family = "'Inter', sans-serif";
+
+            probabilityChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Cumulative Chance of Getting Heirloom Shards (%)',
+                        data: data,
+                        borderColor: '#0284c7', // sky-600
+                        backgroundColor: 'rgba(2, 132, 199, 0.1)', // sky-600 with alpha
+                        tension: 0.1,
+                        fill: true,
+                        pointRadius: 0, 
+                        pointHitRadius: 10, 
+                    },
+                    {
+                        label: 'Your Current Progress',
+                        data: [], // This will be a single point
+                        borderColor: '#f59e0b', // amber-500
+                        backgroundColor: '#f59e0b',
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        showLine: false,
+                        type: 'scatter', 
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Regular Apex Packs Opened', font: { weight: '600'}},
+                            ticks: { 
+                                maxTicksLimit: 11, // 0, 50, 100 ... 500
+                                callback: function(value, index, values) {
+                                   if (value % 50 === 0 || value === HEIRLOOM_PITY_CAP) return value;
+                                }
+                            }
+                        },
+                        y: {
+                            title: { display: true, text: 'Cumulative Probability (%)', font: { weight: '600'}},
+                            min: 0,
+                            max: 100,
+                            ticks: { callback: function(value) { return value + '%' } }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: true, position: 'top', labels: { font: { size: 12 } } },
+                        tooltip: {
+                            enabled: false, // Disable default tooltip
+                            external: function(context) {
+                                const tooltipModel = context.tooltip;
+                                if (tooltipModel.opacity === 0) {
+                                    chartTooltipEl.style.opacity = '0';
+                                    return;
+                                }
+                                chartTooltipEl.style.opacity = '1';
+                                chartTooltipEl.style.left = tooltipModel.caretX + 'px';
+                                chartTooltipEl.style.top = probabilityChartCanvas.getBoundingClientRect().top + window.scrollY + tooltipModel.caretY - chartTooltipEl.offsetHeight - 5 + 'px';
+
+                                if (tooltipModel.body) {
+                                    const packs = tooltipModel.dataPoints[0].label;
+                                    const chance = parseFloat(tooltipModel.dataPoints[0].raw).toFixed(2);
+                                    chartTooltipEl.innerHTML = `Packs: ${packs}<br>Chance: ${chance}%`;
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    hover: {
+                        mode: 'nearest',
+                        intersect: true
+                    },
+                    animation: {
+                        duration: 300 
+                    }
+                }
+            });
+        }
+
+        function updateChartHighlight(currentPacks) {
+            if (!probabilityChart) return;
+            currentPacks = Math.min(currentPacks, HEIRLOOM_PITY_CAP); // Cap at 500 for chart display
+            
+            let chanceAtCurrentPacks;
+            if (currentPacks < HEIRLOOM_PITY_CAP) {
+                const cumulativeChanceOfNotGetting = Math.pow((1 - HEIRLOOM_CHANCE_PER_PACK), currentPacks);
+                chanceAtCurrentPacks = (1 - cumulativeChanceOfNotGetting) * 100;
+            } else {
+                chanceAtCurrentPacks = 100;
+            }
+
+            probabilityChart.data.datasets[1].data = [{ x: currentPacks, y: chanceAtCurrentPacks }];
+            probabilityChart.update('none'); // 'none' for no animation on update
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeChart();
+            // Set default values for quick demo if needed, or handle initial state.
+            // playerLevelInput.value = 220; // From example
+            // purchasedPacksInput.value = 100; // From example
+            // updateResults(); // To show initial calculation if defaults are set
+        });
+
+    </script>
+</body>
+</html>
