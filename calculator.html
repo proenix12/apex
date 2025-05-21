@@ -79,15 +79,15 @@
             <form id="heirloomDataForm" class="space-y-4">
                 <div>
                     <label for="submitLevel" class="block text-sm font-medium text-slate-700">Player Level When Shards Received:</label>
-                    <input type="number" id="submitLevel" name="entry.YOUR_LEVEL_FIELD_ID" min="1" required class="form-input mt-1" placeholder="E.g., 350">
+                    <input type="number" id="submitLevel" name="entry.1568129398" min="1" required class="form-input mt-1" placeholder="E.g., 350">
                 </div>
                 <div>
                     <label for="submitPacksOpened" class="block text-sm font-medium text-slate-700">Estimated Total Packs Opened When Shards Received:</label>
-                    <input type="number" id="submitPacksOpened" name="entry.YOUR_PACKS_FIELD_ID" min="1" required class="form-input mt-1" placeholder="E.g., 450">
+                    <input type="number" id="submitPacksOpened" name="entry.664547203" min="1" required class="form-input mt-1" placeholder="E.g., 450">
                 </div>
                 <div>
                     <label for="submitHitPity" class="block text-sm font-medium text-slate-700">Did you hit the 500-pack pity guarantee?</label>
-                    <select id="submitHitPity" name="entry.YOUR_PITY_FIELD_ID" required class="form-input mt-1">
+                    <select id="submitHitPity" name="entry.1052855262" required class="form-input mt-1">
                         <option value="">--Please choose an option--</option>
                         <option value="Yes">Yes</option>
                         <option value="No">No</option>
@@ -96,14 +96,14 @@
                 </div>
                 <div>
                     <label for="submitDate" class="block text-sm font-medium text-slate-700">Date Received (Optional):</label>
-                    <input type="date" id="submitDate" name="entry.YOUR_DATE_FIELD_ID" class="form-input mt-1">
+                    <input type="date" id="submitDate" name="entry.1726664192" class="form-input mt-1">
                 </div>
                 <button type="submit" class="submit-button">Submit My Heirloom Data</button>
             </form>
             <p id="formSubmissionStatus" class="mt-4 text-sm"></p>
             <div class="info-box mt-6">
-                <p class="text-sm text-blue-700 font-semibold">Note for Page Owner (IMPORTANT for Submission):</p>
-                <p class="text-xs text-blue-600">1. Ensure the `GOOGLE_FORM_ACTION_URL` in the script below is correct (it has been updated based on your provided form source). <br>2. **Crucially, for each input field in the HTML form above (e.g., `id="submitLevel"`), you MUST replace its `name` attribute (e.g., `name="entry.YOUR_LEVEL_FIELD_ID"`) with the actual `entry.xxxxxxxxx` ID from YOUR Google Form. Find these by viewing the source of your live Google Form and inspecting each input element.**</p>
+                <p class="text-sm text-blue-700 font-semibold">Note for Page Owner:</p>
+                <p class="text-xs text-blue-600">The `GOOGLE_FORM_ACTION_URL` in the script has been updated based on the form source you provided. The `name` attributes in the HTML form above have also been updated with the entry IDs extracted from that source. Ensure your Google Form is accepting responses and correctly linked to your Google Sheet.</p>
             </div>
         </section>
 
@@ -134,7 +134,7 @@
              <p id="communityStatsStatus" class="mt-4 text-sm"></p>
             <div class="info-box mt-6">
                 <p class="text-sm text-blue-700 font-semibold">Note for Page Owner (Statistics):</p>
-                <p class="text-xs text-blue-600">1. Publish your Google Sheet (the one linked to your form) to the web as a CSV. <br>2. Update `PUBLISHED_CSV_URL` in the script with this public CSV link. <br>3. Ensure JavaScript constants like `CSV_COLUMN_PACKS_OPENED` match your CSV headers exactly.</p>
+                <p class="text-xs text-blue-600">1. Publish your Google Sheet (the one linked to your form) to the web as a CSV. <br>2. Ensure `PUBLISHED_CSV_URL` in the script is correct. <br>3. Ensure JavaScript constants like `CSV_COLUMN_PACKS_OPENED` match your CSV headers exactly.</p>
             </div>
         </section>
 
@@ -321,12 +321,12 @@
 
                 // Check if the Form URL is correctly set and is a formResponse URL
                 if (!GOOGLE_FORM_ACTION_URL || 
-                    GOOGLE_FORM_ACTION_URL === 'YOUR_FORM_ACTION_URL' || // Checks against a potential placeholder
-                    !GOOGLE_FORM_ACTION_URL.endsWith('/formResponse')) { // Validates the URL structure
+                    GOOGLE_FORM_ACTION_URL === 'YOUR_FORM_ACTION_URL' || // Placeholder check
+                    !GOOGLE_FORM_ACTION_URL.includes('/formResponse')) { // Structure check
                     
-                    let alertMessage = 'Page owner: The GOOGLE_FORM_ACTION_URL in the JavaScript code is not correctly configured. It should end with "/formResponse".';
-                    if (GOOGLE_FORM_ACTION_URL && GOOGLE_FORM_ACTION_URL.includes('preview')) { // Specific check for preview link
-                         alertMessage = 'Page owner: The GOOGLE_FORM_ACTION_URL currently seems to be a "preview" link. Please use the correct "/formResponse" submission URL from your form\'s HTML source.';
+                    let alertMessage = 'Page owner: Please configure the GOOGLE_FORM_ACTION_URL in the JavaScript code with the correct link ending in "/formResponse".';
+                    if (GOOGLE_FORM_ACTION_URL && (GOOGLE_FORM_ACTION_URL.includes('preview') || GOOGLE_FORM_ACTION_URL.includes('/viewform'))) { 
+                         alertMessage = 'Page owner: The GOOGLE_FORM_ACTION_URL seems to be a "preview" or "viewform" link. Please use the correct "/formResponse" submission URL found in your form\'s HTML source code (usually in the <form> tag\'s action attribute).';
                     }
                     formSubmissionStatusEl.textContent = 'Submission system not configured correctly by page owner.';
                     formSubmissionStatusEl.className = 'mt-4 text-sm text-red-600';
@@ -395,8 +395,8 @@
             communityStatsStatusEl.textContent = 'Loading community stats...';
             communityStatsStatusEl.className = 'mt-4 text-sm text-amber-600';
 
-            if (PUBLISHED_CSV_URL === 'YOUR_PUBLISHED_CSV_URL' || !PUBLISHED_CSV_URL) {
-                 communityStatsStatusEl.textContent = 'Community stats system not configured by page owner.';
+            if (PUBLISHED_CSV_URL === 'YOUR_PUBLISHED_CSV_URL' || !PUBLISHED_CSV_URL) { // Placeholder check
+                 communityStatsStatusEl.textContent = 'Community stats system not configured by page owner (CSV URL missing).';
                  communityStatsStatusEl.className = 'mt-4 text-sm text-red-600';
                  alert('Page owner: Please configure the PUBLISHED_CSV_URL in the JavaScript code.');
                  return;
@@ -417,12 +417,17 @@
                     return;
                 }
                 
-                if (data.length > 0 && (!data[0].hasOwnProperty(CSV_COLUMN_PACKS_OPENED) || !data[0].hasOwnProperty(CSV_COLUMN_PITY_REACHED))) {
-                    communityStatsStatusEl.textContent = 'CSV data is missing required columns. Check JS constants (CSV_COLUMN_PACKS_OPENED, CSV_COLUMN_PITY_REACHED) match CSV headers.';
-                    communityStatsStatusEl.className = 'mt-4 text-sm text-red-600';
-                    console.error('CSV Column Mismatch. Expected headers for stats:', CSV_COLUMN_PACKS_OPENED, CSV_COLUMN_PITY_REACHED, '. Found headers in CSV:', Object.keys(data[0]));
-                    communityStatsResultsEl.classList.add('hidden');
-                    return;
+                // Ensure required columns for stats exist in the parsed CSV data
+                const requiredHeadersForStats = [CSV_COLUMN_PACKS_OPENED, CSV_COLUMN_PITY_REACHED];
+                const firstRowData = data[0];
+                for (const header of requiredHeadersForStats) {
+                    if (!firstRowData.hasOwnProperty(header)) {
+                        communityStatsStatusEl.textContent = `CSV data is missing required column: "${header}". Please check JavaScript constants (e.g., CSV_COLUMN_PACKS_OPENED) match your CSV headers exactly.`;
+                        communityStatsStatusEl.className = 'mt-4 text-sm text-red-600';
+                        console.error('CSV Column Mismatch. Expected header for stats:', header, '. Found headers in CSV:', Object.keys(firstRowData));
+                        communityStatsResultsEl.classList.add('hidden');
+                        return;
+                    }
                 }
 
                 let totalSubmissions = data.length;
